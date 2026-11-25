@@ -1,5 +1,7 @@
+import { buildDesk } from "@/lib/desk-ui";
 import { money, uid } from "@/lib/format";
 import { enforceOutput, HANDOFF_REPLY, LOW_CONFIDENCE_REPLY, screenMessage, SCHOOL_DISCLAIMER } from "@/lib/guardrails";
+import { agentById } from "@/lib/agents";
 import { listingById } from "@/lib/listings";
 import { maskPii, maskValue } from "@/lib/pii";
 import { retrieve } from "@/lib/rag";
@@ -96,6 +98,7 @@ export function prepareTurn(
       createdAt: nowIso,
       guardrail: { blocked: true, category: guard.category },
       suggestions: ["I'm looking for a 3 bed under 650k in Highlands"],
+      desk: buildDesk({ refusal: true }),
     };
     conversation.messages.push(reply);
     return {
@@ -238,9 +241,9 @@ function compose(data: StoreData, conversation: Conversation, text: string, outc
   const crm = [...outcomes].reverse().find((item) => item.crm)?.crm;
   const citations = outcomes.find((item) => item.kb)?.kb;
   const targetId = listings[0]?.id ?? conversation.preferredListingId ?? conversation.lastListingIds[0];
-  const slots = buildSlots(now)
-    .filter((slot) => !data.showings.some((showing) => showing.listingId === targetId && showing.slotId === slot.id))
-    .slice(0, 6);
+  const generated = buildSlots(now);
+  const openSlots = generated.filter((slot) => !data.showings.some((showing) => showing.listingId === targetId && showing.slotId === slot.id));
+  const slots = (openSlots.length ? openSlots : generated).slice(0, 6);
   const scheduleTrace = outcomes.find((item) => item.trace.name === "schedule_showing");
   const searchTrace = outcomes.find((item) => item.trace.name === "search_listings");
   const nurtureTrace = outcomes.find((item) => item.trace.name === "nurture_opt_in");
@@ -249,15 +252,19 @@ function compose(data: StoreData, conversation: Conversation, text: string, outc
   const paragraphs: string[] = [];
   if (handoff && !searchTrace && !qualification && !showing && !valuation) {
     const lead = handoff.reason === "low_confidence" ? LOW_CONFIDENCE_REPLY : HANDOFF_REPLY;
+    const attached = attachmentNote(text);
     return {
       id: uid("msg"),
       role: "assistant",
-      content: `${lead}\n\nTicket ${handoff.id}.`,
+      content: `${attached ? `${attached}\n\n` : ""}${lead}\n\nTicket ${handoff.id}.`,
       createdAt: now.toISOString(),
       toolCalls: visibleTraces(outcomes),
       suggestions: ["I'm looking for a 3 bed under 650k in Highlands"],
+      desk: buildDesk({ handoffId: handoff.id, agentName: "Maya Ellison" }),
     };
   }
+  const attached = attachmentNote(text);
+  if (attached) paragraphs.push(attached);
   if (school) paragraphs.push(SCHOOL_DISCLAIMER);
 
   if (searchTrace) {
@@ -329,6 +336,8 @@ function compose(data: StoreData, conversation: Conversation, text: string, outc
 
   const content = enforceOutput(paragraphs.join("\n\n"));
   const blocked = content.includes("I can't help with that");
+  const home = showing ? listingById(showing.listingId) : undefined;
+  const who = assignment?.agent.name ?? (showing ? agentById(showing.agentId)?.name : undefined);
   return {
     id: uid("msg"),
     role: "assistant",
@@ -341,8 +350,35 @@ function compose(data: StoreData, conversation: Conversation, text: string, outc
       ? ["I'm looking for a 3 bed under 650k in Highlands"]
       : suggestionsFor(conversation, listings, slots, qualification?.tier, Boolean(showing)),
     qualification,
-    guardrail: school ? { blocked: false } : undefined,
+    guardrail: school || blocked ? { blocked, category: blocked ? "steering" : undefined } : undefined,
+    desk: blocked
+      ? buildDesk({ refusal: true })
+      : buildDesk({
+          listings: listings.slice(0, 6),
+          detail: Boolean(outcomes.find((item) => item.trace.name === "get_listing_details")),
+          slots:
+            !showing &&
+            ((scheduleTrace && !showing) ||
+              (qualification && conversation.fields.role !== "seller" && qualification.tier !== "cold"))
+              ? slots
+              : [],
+          showing,
+          where: home?.address,
+          who,
+          qualification,
+          qualifying: conversation.qualifying,
+          scored: conversation.scored,
+          handoffId: handoff?.id,
+          valuation,
+          agentName: who,
+        }),
   };
+}
+
+function attachmentNote(text: string): string | undefined {
+  const attached = text.match(/\[Attached:\s*([^\]]+)\]/i);
+  if (!attached) return undefined;
+  return `Got ${attached[1].trim()}. I can still search and book; this demo does not run diagnostics on images.`;
 }
 
 function visibleTraces(outcomes: ToolOutcome[]) {

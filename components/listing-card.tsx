@@ -31,7 +31,7 @@ export function ListingCard({ listing, compact = false }: { listing: Listing; co
         </p>
         {!compact && <p className="mt-2 text-sm text-muted-foreground">{listing.description}</p>}
         {listing.openHouse && (
-          <p className="mt-2 text-xs tracking-wide text-accent-foreground uppercase">Open house {listing.openHouse}</p>
+          <p className="mt-2 text-xs tracking-wide text-brass uppercase">Open house {listing.openHouse}</p>
         )}
       </CardContent>
     </Card>

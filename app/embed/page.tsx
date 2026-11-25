@@ -1,8 +1,12 @@
-import type { Metadata } from "next";
-import { ChatPanel } from "@/components/chat-panel";
+"use client";
 
-export const metadata: Metadata = { title: "Embed" };
+import { ChatWidget } from "@/components/chat/chat-widget";
 
 export default function EmbedPage() {
-  return <ChatPanel variant="embed" />;
+  return (
+    <ChatWidget
+      variant="embed"
+      onClose={() => window.parent.postMessage({ type: "summit-ridge:close" }, "*")}
+    />
+  );
 }

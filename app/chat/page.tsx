@@ -9,7 +9,7 @@ export default function ChatPage() {
     <>
       <SiteHeader />
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-6">
-        <ChatPanel variant="full" />
+        <ChatPanel variant="page" />
       </main>
       <SiteFooter />
     </>

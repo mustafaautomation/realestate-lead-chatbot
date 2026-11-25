@@ -303,6 +303,7 @@ function humanTool(args: Record<string, unknown>, ctx: ToolContext): ToolOutcome
   const reason = stringArg(args.reason);
   const allowed = reason === "request" || reason === "frustration" || reason === "low_confidence" || reason === "sensitive" ? reason : "request";
   const ticket = openHandoff(ctx.data, ctx.conversation, allowed, ctx.now);
+  ctx.conversation.botPaused = true;
   return {
     trace: { name: "request_human", args: { reason: allowed }, summary: `Opened ${ticket.id} (${allowed}).` },
     handoff: ticket,

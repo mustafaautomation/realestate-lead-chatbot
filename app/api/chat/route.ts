@@ -12,8 +12,11 @@ export async function POST(request: Request) {
     return Response.json({ error: "Send a message under 2,000 characters." }, { status: 400 });
   }
   const data = loadStore();
+  const headerNow = request.headers.get("x-summit-now");
+  const parsedNow = headerNow ? new Date(headerNow) : new Date();
+  const now = Number.isNaN(parsedNow.getTime()) ? new Date() : parsedNow;
   const useModel = Boolean(process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY) && process.env.LLM_PROVIDER !== "mock";
-  const turn = useModel ? await runModelTurn(data, message, conversationId, new Date()) : runTurn(data, message, conversationId, new Date());
+  const turn = useModel ? await runModelTurn(data, message, conversationId, now) : runTurn(data, message, conversationId, now);
   saveStore(data);
   const encoder = new TextEncoder();
   const stream = new ReadableStream({

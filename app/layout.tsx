@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
-import { Fraunces, Geist_Mono, Source_Sans_3 } from "next/font/google";
+import { Fraunces, Geist, Geist_Mono } from "next/font/google";
+import { SiteWidgetGate } from "@/components/site-widget";
+import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
-const source = Source_Sans_3({
+const geist = Geist({
   subsets: ["latin"],
-  variable: "--font-source",
+  variable: "--font-geist",
 });
 
 const fraunces = Fraunces({
@@ -28,8 +30,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${source.variable} ${fraunces.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en" className={`${geist.variable} ${fraunces.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
+      <body className="flex min-h-full flex-col pb-28">
+        <ThemeProvider>
+          {children}
+          <SiteWidgetGate />
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

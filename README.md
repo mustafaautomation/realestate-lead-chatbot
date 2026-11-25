@@ -10,9 +10,15 @@ Live demo: https://realty-chat.quvantic.com
 
 ![Demo](docs/demo.gif)
 
+![Landing](docs/screenshots/landing.png)
+
+![Citation](docs/screenshots/chat-citation.png)
+
+![Showing](docs/screenshots/showing.png)
+
 ## What you can click through
 
-1. "I'm looking for a 3 bed under 650k in Highlands."
+1. "Highlands, 3 beds, under $650k."
 2. Cards come back from `search_listings`. The $875k Highlands house is not one of them.
 3. Say you are pre-approved, relocating for work, and moving within 30 days.
 4. The lead is hot. Maya Ellison is assigned. A mock CRM id is opened.

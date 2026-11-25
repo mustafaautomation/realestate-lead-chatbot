@@ -98,6 +98,28 @@ export type ProcessedInbound = {
   reply: string;
 };
 
+export type DeskSlot = {
+  id: string;
+  label: string;
+  weekday: string;
+  startsAt: string;
+};
+
+export type DeskCard =
+  | { kind: "carousel"; listings: Listing[] }
+  | { kind: "listing"; listing: Listing }
+  | { kind: "slots"; listingId?: string; address?: string; slots: DeskSlot[] }
+  | { kind: "qualify" }
+  | { kind: "confirm"; code: string; when: string; where: string; who: string; startsAt: string }
+  | { kind: "quote"; title: string; rows: { label: string; amount: string }[]; total: string; note: string }
+  | { kind: "refusal" }
+  | { kind: "handoff"; ticketId: string };
+
+export type DeskPayload = {
+  cards: DeskCard[];
+  agentName?: string;
+};
+
 export type ChatMessage = {
   id: string;
   role: "user" | "assistant";
@@ -109,6 +131,7 @@ export type ChatMessage = {
   suggestions?: string[];
   guardrail?: GuardrailTrace;
   qualification?: Qualification;
+  desk?: DeskPayload;
 };
 
 export type Conversation = {
@@ -123,6 +146,7 @@ export type Conversation = {
   lastListingIds: string[];
   preferredListingId?: string;
   leadId?: string;
+  botPaused?: boolean;
 };
 
 export type Lead = {

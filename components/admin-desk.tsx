@@ -27,6 +27,7 @@ export function AdminDesk() {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [resumeNote, setResumeNote] = useState<string | null>(null);
 
   async function load() {
     setError(null);
@@ -181,6 +182,7 @@ export function AdminDesk() {
           </div>
         </TabsContent>
         <TabsContent value="handoffs" className="pt-4">
+          {resumeNote && <p className="mb-3 text-sm font-medium">{resumeNote}</p>}
           {data.handoffs.length === 0 ? (
             <p className="rounded-xl border border-dashed px-4 py-8 text-sm">No handoff tickets. Ask the chat for a person, or ask something the notes do not cover.</p>
           ) : (
@@ -194,6 +196,19 @@ export function AdminDesk() {
                   <p className="mt-2 text-sm">{ticket.summary}</p>
                   <button type="button" className="mt-2 text-sm underline" onClick={() => setSelected(ticket.conversationId)}>
                     Open transcript
+                  </button>
+                  <button
+                    type="button"
+                    className="mt-2 ml-3 rounded-full bg-[var(--accent)] px-3 py-1 text-[13px] text-[var(--accent-foreground)]"
+                    onClick={() => {
+                      void fetch("/api/admin/resume", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ conversationId: ticket.conversationId }),
+                      }).then(() => setResumeNote("Bot resumed"));
+                    }}
+                  >
+                    Resume bot
                   </button>
                 </li>
               ))}

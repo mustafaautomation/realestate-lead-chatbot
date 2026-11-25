@@ -7,7 +7,7 @@ test("demo recording", async ({ page }) => {
   await page.goto("/");
   await page.waitForTimeout(600);
   await page.getByRole("button", { name: "I'm looking for a 3 bed under 650k in Highlands" }).click();
-  await expect(page.getByText("SR-2403")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Summit Ridge chat" }).getByText("SR-2403")).toBeVisible();
   await page.waitForTimeout(900);
   await page.getByRole("button", { name: /pre-approved/i }).click();
   await expect(page.getByText(/hot/i).first()).toBeVisible();
@@ -39,7 +39,7 @@ test("main flow books a showing", async ({ page }) => {
   await page.goto("/");
   await page.screenshot({ path: "docs/screenshots/landing.png", fullPage: false });
   await page.getByRole("button", { name: "I'm looking for a 3 bed under 650k in Highlands" }).click();
-  await expect(page.getByText("SR-2403")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Summit Ridge chat" }).getByText("SR-2403")).toBeVisible();
   await page.getByRole("button", { name: /pre-approved/i }).click();
   await expect(page.getByText(/hot/i).first()).toBeVisible();
   await page.getByRole("button", { name: /^Book / }).click();

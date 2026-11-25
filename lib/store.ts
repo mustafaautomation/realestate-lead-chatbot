@@ -5,26 +5,46 @@ import { LISTINGS } from "@/lib/listings";
 import { seedStore } from "@/lib/seed";
 import { hydrateStore, type StoreData } from "@/lib/types";
 
+const VERCEL_STORE = "/tmp/summit-ridge-store.json";
+
+let memory: StoreData | null = null;
+
 export function dataPath(): string {
-  return process.env.DATA_PATH || path.join(process.cwd(), "data", "store.json");
+  if (process.env.DATA_PATH) return process.env.DATA_PATH;
+  if (process.env.VERCEL) return VERCEL_STORE;
+  return path.join(process.cwd(), "data", "store.json");
 }
 
 export function loadStore(): StoreData {
+  if (memory) return memory;
   const file = dataPath();
-  if (!fs.existsSync(/* turbopackIgnore: true */ file)) {
-    const seeded = seedStore(new Date());
-    saveStore(seeded);
-    return seeded;
+  try {
+    if (fs.existsSync(/* turbopackIgnore: true */ file)) {
+      memory = hydrateStore(JSON.parse(fs.readFileSync(/* turbopackIgnore: true */ file, "utf8")) as StoreData);
+      return memory;
+    }
+  } catch {
+    memory = seedStore(new Date());
+    return memory;
   }
-  return hydrateStore(JSON.parse(fs.readFileSync(/* turbopackIgnore: true */ file, "utf8")) as StoreData);
+  memory = seedStore(new Date());
+  saveStore(memory);
+  return memory;
 }
 
 export function saveStore(data: StoreData): void {
+  memory = data;
   const file = dataPath();
-  fs.mkdirSync(/* turbopackIgnore: true */ path.dirname(file), { recursive: true });
-  const temp = `${file}.tmp`;
-  fs.writeFileSync(/* turbopackIgnore: true */ temp, JSON.stringify(data));
-  fs.renameSync(/* turbopackIgnore: true */ temp, file);
+  try {
+    fs.mkdirSync(/* turbopackIgnore: true */ path.dirname(file), { recursive: true });
+    const temp = `${file}.tmp`;
+    fs.writeFileSync(/* turbopackIgnore: true */ temp, JSON.stringify(data));
+    fs.renameSync(/* turbopackIgnore: true */ temp, file);
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === "EROFS" || code === "EACCES" || code === "EPERM") return;
+    throw error;
+  }
 }
 
 export function resetStore(): StoreData {

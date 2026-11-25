@@ -151,7 +151,7 @@ Optional environment variables, all empty by default:
 | `LLM_PROVIDER` | Set to `mock` to force the offline desk even when a key is present. |
 | `WHATSAPP_VERIFY_TOKEN` | Webhook verify. Defaults to `summit-ridge-verify`. |
 | `MESSENGER_VERIFY_TOKEN` | Webhook verify. Same default. |
-| `DATA_PATH` | JSON store path. Defaults to `data/store.json`. |
+| `DATA_PATH` | JSON store path. Local default is `data/store.json`. On Vercel the desk uses `/tmp/summit-ridge-store.json`, which that instance can write. |
 | `PUBLIC_BASE_URL` | `https://realty-chat.quvantic.com` |
 
 Portfolio demo by Quvantic - fictional brand, not a real business / not client work.
